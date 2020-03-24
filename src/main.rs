@@ -1,91 +1,50 @@
+use std::env;
 use std::io;
 use termion;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use tui::widgets::Widget;
+use termion::event::Key;
+use tui::layout::{Constraint, Direction, Layout};
+use tui::widgets::{List, Text, Widget};
 use tui::*;
 
-const MESSAGE: &str = "Merry Christmas !!";
+mod qiita;
+mod event;
 
-struct Label<'a> {
-    x: u16,
-    y: u16,
-    text: &'a str,
-    style: style::Style,
-}
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let api_key = env::var("QIITA_TOKEN").unwrap();
 
-impl<'a> Default for Label<'a> {
-    fn default() -> Label<'a> {
-        Label {
-            x: 0,
-            y: 0,
-            text: "",
-            style: style::Style::default(),
-        }
-    }
-}
-
-impl<'a> Label<'a> {
-    fn text(&mut self, text: &'a str) -> &mut Label<'a> {
-        self.text = text;
-        self
-    }
-    fn position(&mut self, x: u16, y: u16) -> &mut Label<'a> {
-        self.x = x;
-        self.y = y;
-        self
-    }
-    fn style(&mut self, style: style::Style) -> &mut Label<'a> {
-        self.style = style;
-        self
-    }
-}
-
-impl<'a> Widget for Label<'a> {
-    fn draw(&mut self, area: layout::Rect, buf: &mut buffer::Buffer) {
-        buf.set_string(
-            area.left() + self.x,
-            area.top() + self.y,
-            self.text,
-            self.style,
-        );
-    }
-}
-
-fn main() {
     let stdout = io::stdout().into_raw_mode().unwrap();
     let stdout = termion::screen::AlternateScreen::from(stdout);
     let backend = backend::TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
     terminal.hide_cursor();
-    terminal
-        .draw(|mut f| {
-            let size = f.size();
-            Label::default().text("Hello World !!").render(&mut f, size);
-        })
-        .unwrap();
 
-    let stdin = io::stdin();
-    for c in stdin.keys() {
-        match c {
-            Ok(termion::event::Key::Char('m')) => {
-                terminal.clear();
-                terminal
-                    .draw(|mut f| {
-                        let size = f.size();
-                        let x = size.width / 2 - (MESSAGE.len() / 2) as u16;
-                        let y = size.height / 2;
-                        let style = style::Style::default().fg(style::Color::Blue);
-                        Label::default()
-                            .text(MESSAGE)
-                            .position(x, y)
-                            .style(style)
-                            .render(&mut f, size);
-                    })
-                    .unwrap();
-            }
-            Ok(termion::event::Key::Ctrl('c')) => break,
+    let client = qiita::QiitaClient::new(&format!("Bearer {}", api_key));
+    let trends = client.trends().unwrap();
+
+    let events = event::Events::new();
+
+    loop {
+        terminal.draw(|mut f| {
+            let mut items = List::new(trends.iter().map(|trend| Text::raw(&trend.node.title)));
+            let chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                .split(f.size());
+            f.render(&mut items, chunks[0])
+        });
+
+        match events.next()? {
+            event::Event::Input(key) => match key {
+                Key::Char('q') => {
+                    break;
+                },
+                _ => {}
+            },
             _ => {}
-        }
+        };
     }
+
+    Ok(())
 }
