@@ -1,15 +1,15 @@
 use std::env;
 use std::io;
 use termion;
+use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use termion::event::Key;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::widgets::{List, Text, Widget};
 use tui::*;
 
-mod qiita;
 mod event;
+mod qiita;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = env::var("QIITA_TOKEN").unwrap();
@@ -27,7 +27,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         terminal.draw(|mut f| {
-            let mut items = List::new(trends.iter().map(|trend| Text::raw(&trend.node.title)));
+            let mut items = List::new(
+                trends
+                    .iter()
+                    .map(|trend| Text::raw(format!("{}\n\n", &trend.node.title))),
+            );
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
@@ -37,9 +41,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match events.next()? {
             event::Event::Input(key) => match key {
-                Key::Char('q') => {
+                Key::Char('q') | Key::Ctrl('c') => {
                     break;
-                },
+                }
                 _ => {}
             },
             _ => {}
