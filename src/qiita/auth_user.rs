@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Item {
     // pub rendered_body: String,
-    // pub body: String,
+    pub body: String,
     // pub coediting: bool,
     // pub comments_count: usize,
     // pub created_at: String,
