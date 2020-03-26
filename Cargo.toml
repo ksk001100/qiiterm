@@ -1,10 +1,13 @@
 [package]
 name = "qiiterm"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["ksk001100 <hm.pudding0715@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+repository = "https://github.com/ksk001100/qiiterm"
+keywords = ["tui", "qiita"]
+license-file = "LICENSE"
+readme = "README.md"
+description = "[WIP] Qiita TUI client"
 
 [dependencies]
 tui = "0.8"
