@@ -34,8 +34,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let events = event::Events::new();
 
-    let mut selected = 0;
     let mut selected_item_index = 0;
+    let mut show_item_index = 0;
 
     loop {
         terminal.draw(|mut f| {
@@ -54,13 +54,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .map(|item| &item.title)
                         .collect::<Vec<&String>>(),
                 )
-                .select(Some(selected))
+                .select(Some(selected_item_index))
                 .highlight_symbol(">>")
                 .render(&mut f, chunks[0]);
 
             let block = Block::default().borders(Borders::ALL);
             List::new(
-                (&articles[selected_item_index].body)
+                (&articles[show_item_index].body)
                     .split("\n")
                     .collect::<Vec<&str>>()
                     .iter()
@@ -76,17 +76,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
                 Key::Char('k') | Key::Up => {
-                    if selected > 0 {
-                        selected -= 1;
+                    if selected_item_index > 0 {
+                        selected_item_index -= 1;
                     }
                 }
                 Key::Char('j') | Key::Down => {
-                    if selected + 1 < articles.len() {
-                        selected += 1;
+                    if selected_item_index + 1 < articles.len() {
+                        selected_item_index += 1;
                     }
                 }
                 Key::Char('\n') => {
-                    selected_item_index = selected;
+                    show_item_index = selected_item_index;
                 }
                 _ => {}
             },
