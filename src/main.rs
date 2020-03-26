@@ -21,23 +21,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     terminal.hide_cursor();
 
     let client = qiita::QiitaClient::new(&format!("Bearer {}", api_key));
-    let trends = client.trends().unwrap();
+    // let trends = client.trends().unwrap();
+    let items = client.auth_items().unwrap();
 
     let events = event::Events::new();
 
     loop {
         terminal.draw(|mut f| {
             let mut items = List::new(
-                trends
+                // trends
+                //     .iter()
+                //     .map(|trend| Text::raw(format!("{}", &trend.node.title))),
+                items
                     .iter()
-                    .map(|trend| Text::raw(format!("{}\n\n", &trend.node.title))),
+                    .map(|item| Text::raw(format!("{}", &item.title))),
             );
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                .constraints([Constraint::Percentage(100), Constraint::Percentage(100)].as_ref())
                 .split(f.size());
             f.render(&mut items, chunks[0])
-        });
+        })?;
 
         match events.next()? {
             event::Event::Input(key) => match key {

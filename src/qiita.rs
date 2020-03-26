@@ -1,24 +1,11 @@
 use reqwest::{self, blocking::Client, header, Error};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::Deserialize;
+
+pub mod auth_user;
+pub mod trend;
 
 pub struct QiitaClient {
     client: Client,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Trend {
-    pub isNewArrival: bool,
-    pub hasCodeBlock: bool,
-    pub node: Node,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Node {
-    pub createdAt: String,
-    pub likesCount: usize,
-    pub title: String,
-    pub uuid: String,
 }
 
 impl QiitaClient {
@@ -36,20 +23,6 @@ impl QiitaClient {
                 client: Client::new(),
             },
         }
-    }
-
-    pub fn my_items(&self) -> Result<(), Error> {
-        let url = "https://qiita.com/api/v2/authenticated_user/items";
-        self.get(url)?;
-
-        Ok(())
-    }
-
-    pub fn trends(&self) -> Result<Vec<Trend>, Error> {
-        let url = "https://qiita-api.netlify.com/.netlify/functions/trend";
-        let trends = self.get::<Vec<Trend>>(url)?;
-
-        Ok(trends)
     }
 
     fn get<'a, T: ?Sized>(&self, url: &str) -> Result<T, Error>
